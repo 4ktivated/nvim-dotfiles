@@ -6,7 +6,7 @@ return {
   -- Optional. You can alse set your own keybindings
   keys = {
     -- Global Minimap Controls
-    { '<leader>tm', '<cmd>Neominimap toggle<cr>', desc = 'Toggle global minimap' },
+    { '<leader>tm', '<cmd>Neominimap Toggle<cr>', desc = 'Toggle global minimap' },
     -- { "<leader>no", "<cmd>Neominimap on<cr>", desc = "Enable global minimap" },
     -- { "<leader>nc", "<cmd>Neominimap off<cr>", desc = "Disable global minimap" },
     -- { "<leader>nr", "<cmd>Neominimap refresh<cr>", desc = "Refresh global minimap" },

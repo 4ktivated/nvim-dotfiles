@@ -176,6 +176,9 @@ vim.o.confirm = true
 vim.keymap.set('x', '<S-tab>', '<gv')
 vim.keymap.set('x', '<tab>', '>gv|')
 
+--Copy path to file relative
+vim.keymap.set('n', 'cg', '<cmd>let @+ = expand("%:f")<CR>')
+
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
@@ -700,7 +703,10 @@ require('lazy').setup({
         ruff = {},
         pyright = {},
         -- php
-        phpactor = {},
+        intelephense = {},
+        --MD
+        markdownlint = {},
+
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -829,12 +835,12 @@ require('lazy').setup({
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load()
+            end,
+          },
         },
         opts = {},
       },
@@ -916,16 +922,29 @@ require('lazy').setup({
     },
   },
   --
+  -- {
+  --   'tiagovla/tokyodark.nvim',
+  --   opts = {
+  --     -- custom options here
+  --   },
+  --   config = function(_, opts)
+  --     require('tokyodark').setup(opts) -- calling setup is optional
+  --     vim.cmd [[colorscheme tokyodark]]
+  --   end,
+  -- }, -- Highlight todo, notes, etc in comments
+
   {
-    'tiagovla/tokyodark.nvim',
-    opts = {
-      -- custom options here
-    },
-    config = function(_, opts)
-      require('tokyodark').setup(opts) -- calling setup is optional
-      vim.cmd [[colorscheme tokyodark]]
+    'sainnhe/sonokai',
+    lazy = false,
+    priority = 1000,
+    config = function()
+      -- Optionally configure and load the colorscheme
+      -- directly inside the plugin declaration.
+      vim.g.sonokai_enable_italic = true
+      vim.g.sonokai_style = 'maia'
+      vim.cmd.colorscheme 'sonokai'
     end,
-  }, -- Highlight todo, notes, etc in comments
+  },
   {
     'folke/todo-comments.nvim',
     event = 'VimEnter',

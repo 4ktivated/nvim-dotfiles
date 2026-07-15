@@ -6,18 +6,17 @@
 -- be extended to other languages as well. That's why it's called
 -- kickstart.nvim and not kitchen-sink.nvim ;)
 
+-- nvim-dap-ui requires nio while its modules are being initialized, so make
+-- the dependency available before activating the rest of the DAP plugins.
+vim.pack.add { 'https://github.com/nvim-neotest/nvim-nio' }
+
 vim.pack.add {
   'https://github.com/mfussenegger/nvim-dap',
   'https://github.com/rcarriga/nvim-dap-ui',
-  'https://github.com/nvim-neotest/nvim-nio',
   'https://github.com/mason-org/mason.nvim',
   'https://github.com/jay-babu/mason-nvim-dap.nvim',
   'https://github.com/leoluz/nvim-dap-go',
 }
-
--- nvim-dap-ui requires nio during module initialization. Explicitly activate it
--- because vim.pack stores managed plugins under pack/*/opt.
-vim.cmd.packadd 'nvim-nio'
 
 -- Basic debugging keymaps, feel free to change to your liking!
 vim.keymap.set('n', '<F5>', function() require('dap').continue() end, { desc = 'Debug: Start/Continue' })

@@ -1,3 +1,4 @@
+-- Legacy lazy.nvim specification consumed by custom.plugins.migrated.
 return {
   'ThePrimeagen/harpoon',
   dependencies = { 'nvim-lua/plenary.nvim' },

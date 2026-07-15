@@ -1,3 +1,4 @@
+-- Legacy lazy.nvim specification consumed by custom.plugins.migrated.
 return {
 	"nvim-lualine/lualine.nvim",
 	dependencies = { "nvim-tree/nvim-web-devicons" },

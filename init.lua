@@ -112,6 +112,8 @@ do
   --  Experiment for yourself to see if you like it!
   vim.o.relativenumber = true
 
+  -- Personal indentation defaults. Filetype plugins and guess-indent may
+  -- override these values for projects with an established style.
   vim.o.tabstop = 4
   vim.o.shiftwidth = 4
 
@@ -149,6 +151,8 @@ do
   -- Configure how new splits should be opened
   vim.o.splitright = true
   vim.o.splitbelow = true
+  -- Keep editing state out of project directories. Persistent undo remains
+  -- enabled through 'undofile' above.
   vim.o.backup = false
   vim.o.swapfile = false
 
@@ -189,8 +193,10 @@ do
   -- Clear highlights on search when pressing <Esc> in normal mode
   --  See `:help hlsearch`
   vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+  -- Preserve the visual selection while shifting multiple selected lines.
   vim.keymap.set('x', '<S-Tab>', '<gv')
   vim.keymap.set('x', '<Tab>', '>gv|')
+  -- Copy the current file path to the system clipboard.
   vim.keymap.set('n', 'cg', '<cmd>let @+ = expand("%:f")<CR>', { desc = 'Copy file path' })
 
   -- Diagnostic Config & Keymaps
@@ -323,6 +329,12 @@ do
         vim.cmd 'TSUpdate'
         return
       end
+
+      if name == 'go.nvim' then
+        if not ev.data.active then vim.cmd.packadd 'go.nvim' end
+        require('go.install').update_all_sync()
+        return
+      end
     end,
   })
 end
@@ -359,15 +371,6 @@ do
   -- See `:help gitsigns` to understand what each configuration key does.
   -- Adds git related signs to the gutter, as well as utilities for managing changes
   vim.pack.add { gh 'lewis6991/gitsigns.nvim' }
-  require('gitsigns').setup {
-    signs = {
-      add = { text = '+' }, ---@diagnostic disable-line: missing-fields
-      change = { text = '~' }, ---@diagnostic disable-line: missing-fields
-      delete = { text = '_' }, ---@diagnostic disable-line: missing-fields
-      topdelete = { text = '‾' }, ---@diagnostic disable-line: missing-fields
-      changedelete = { text = '~' }, ---@diagnostic disable-line: missing-fields
-    },
-  }
 
   -- Useful plugin to show you pending keybinds.
   vim.pack.add { gh 'folke/which-key.nvim' }
@@ -379,6 +382,9 @@ do
     spec = {
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
+      { '<leader>d', group = '[D]ocument' },
+      { '<leader>r', group = '[R]ename' },
+      { '<leader>w', group = '[W]orkspace' },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
@@ -390,18 +396,11 @@ do
   -- change the command under that to load whatever the name of that colorscheme is.
   --
   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-  vim.pack.add { gh 'folke/tokyonight.nvim' }
-  ---@diagnostic disable-next-line: missing-fields
-  require('tokyonight').setup {
-    styles = {
-      comments = { italic = false }, -- Disable italics in comments
-    },
-  }
-
-  -- Load the colorscheme here.
-  -- Like many other themes, this one has different styles, and you could load
-  -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-  vim.cmd.colorscheme 'tokyonight-night'
+  -- Personal colorscheme. Configure globals before loading the Vimscript theme.
+  vim.g.sonokai_enable_italic = true
+  vim.g.sonokai_style = 'maia'
+  vim.pack.add { gh 'sainnhe/sonokai' }
+  vim.cmd.colorscheme 'sonokai'
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
@@ -508,6 +507,7 @@ do
     --   },
     -- },
     pickers = {
+      -- Personal file-search behavior: include dotfiles and files ignored by Git.
       find_files = { hidden = true, no_ignore = true },
     },
     extensions = {
@@ -537,6 +537,13 @@ do
   vim.keymap.set({ 'n', 'v' }, '<leader>fw', builtin.grep_string, { desc = '[F]ind current [W]ord' })
   vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = '[F]ind by [G]rep' })
   vim.keymap.set('n', '<leader>fd', builtin.diagnostics, { desc = '[F]ind [D]iagnostics' })
+  -- macOS-friendly alias for searching only the current buffer.
+  vim.keymap.set('n', '<D-f>', function()
+    builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+      winblend = 10,
+      previewer = false,
+    })
+  end, { desc = 'Fuzzily search in current buffer' })
 
   -- Add Telescope-based LSP pickers when an LSP attaches to a buffer.
   -- If you later switch picker plugins, this is where to update these mappings.
@@ -634,6 +641,14 @@ do
   vim.pack.add { gh 'j-hui/fidget.nvim' }
   require('fidget').setup {}
 
+  -- Better LuaLS support for the Neovim runtime and installed plugins.
+  vim.pack.add { gh 'folke/lazydev.nvim' }
+  require('lazydev').setup {
+    library = {
+      { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
+    },
+  }
+
   --  This function gets run when an LSP attaches to a particular buffer.
   --    That is to say, every time a new file is opened that is associated with
   --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
@@ -650,6 +665,17 @@ do
         mode = mode or 'n'
         vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
       end
+
+      -- Preserve the mappings used by this configuration before the Kickstart
+      -- migration. The Neovim 0.12-style gr* mappings remain available too.
+      map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+      map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
+      map('gI', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
+      map('<leader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
+      map('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
+      map('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Open Workspace Symbols')
+      map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
+      map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
       -- Rename the variable under your cursor.
       --  Most Language Servers support renaming across files, etc.
@@ -719,6 +745,8 @@ do
     -- ts_ls = {},
 
     gopls = {
+      -- Let Treesitter and Sonokai own Go highlighting. Newer lspconfig
+      -- versions otherwise enable gopls semantic tokens over import strings.
       settings = { gopls = { hints = {
         rangeVariableTypes = true,
         parameterNames = true,
@@ -727,13 +755,13 @@ do
         compositeLiteralFields = true,
         compositeLiteralTypes = true,
         functionTypeParameters = true,
-      } } },
+      }, semanticTokens = false } },
     },
+    -- Python language tooling.
     ruff = {},
     pyright = {},
+    -- PHP language tooling.
     intelephense = {},
-    stylua = {}, -- Used to format Lua code
-
     -- Special Lua Config, as recommended by neovim help docs
     lua_ls = {
       on_init = function(client)
@@ -764,6 +792,7 @@ do
       settings = {
         Lua = {
           format = { enable = false }, -- Disable formatting (formatting is done by stylua)
+          completion = { callSnippet = 'Replace' },
         },
       },
     },
@@ -774,6 +803,7 @@ do
     gh 'mason-org/mason.nvim',
     gh 'mason-org/mason-lspconfig.nvim',
     gh 'WhoIsSethDaniel/mason-tool-installer.nvim',
+    { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' },
   }
 
   -- Automatically install LSPs and related tools to stdpath for Neovim
@@ -788,12 +818,16 @@ do
   -- You can press `g?` for help in this menu.
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
-    -- You can add other tools here that you want Mason to install
+    -- Formatters and other executables belong here, not in `servers`.
+    'stylua',
+    'markdownlint',
   })
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
   for name, server in pairs(servers) do
+    -- Advertise snippet and completion support supplied by blink.cmp.
+    server.capabilities = require('blink.cmp').get_lsp_capabilities(server.capabilities)
     vim.lsp.config(name, server)
     vim.lsp.enable(name)
   end
@@ -809,22 +843,19 @@ do
   require('conform').setup {
     notify_on_error = false,
     format_on_save = function(bufnr)
-      -- You can specify filetypes to autoformat on save here:
-      local enabled_filetypes = {
-        -- lua = true,
-        -- python = true,
-      }
-      if enabled_filetypes[vim.bo[bufnr].filetype] then
-        return { timeout_ms = 500 }
-      else
-        return nil
-      end
+      -- Preserve the pre-migration behavior: format supported filetypes on
+      -- save, except languages without a single standard formatting policy.
+      local disabled_filetypes = { c = true, cpp = true }
+      if disabled_filetypes[vim.bo[bufnr].filetype] then return nil end
+      return { timeout_ms = 500 }
     end,
     default_format_opts = {
       lsp_format = 'fallback', -- Use external formatters if configured below, otherwise use LSP formatting. Set to `false` to disable LSP formatting entirely.
     },
     -- You can also specify external formatters in here.
     formatters_by_ft = {
+      -- Add project formatters here. Each list runs from left to right.
+      lua = { 'stylua' },
       go = { 'gofmt', 'goimports' },
       bash = { 'shfmt' },
       python = { 'black', 'ruff', 'isort' },
@@ -856,11 +887,10 @@ do
   --    See the README about individual language/framework/plugin snippets:
   --    https://github.com/rafamadriz/friendly-snippets
   --
-  -- vim.pack.add { gh 'rafamadriz/friendly-snippets' }
-  -- require('luasnip.loaders.from_vscode').lazy_load()
+  vim.pack.add { gh 'rafamadriz/friendly-snippets' }
+  require('luasnip.loaders.from_vscode').lazy_load()
 
   -- [[ Autocomplete Engine ]]
-  vim.pack.add { { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' } }
   require('blink.cmp').setup {
     keymap = {
       -- 'default' (recommended) for mappings similar to built-in completions
@@ -885,6 +915,7 @@ do
       --
       -- See `:help blink-cmp-config-keymap` for defining your own keymap
       preset = 'enter',
+      -- Keep completion navigation compatible with the pre-migration config.
       ['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
       ['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
       ['<Esc>'] = { 'hide', 'fallback' },
@@ -907,7 +938,12 @@ do
     },
 
     sources = {
-      default = { 'lsp', 'path', 'snippets' },
+      -- Add global completion sources here. Provider-specific configuration
+      -- belongs in the `providers` table below.
+      default = { 'lsp', 'path', 'snippets', 'lazydev' },
+      providers = {
+        lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
+      },
     },
 
     snippets = { preset = 'luasnip' },
@@ -922,7 +958,14 @@ do
     fuzzy = { implementation = 'lua' },
 
     -- Shows a signature help window while you type arguments for a function
-    signature = { enabled = true },
+    signature = {
+      enabled = true,
+      window = {
+        border = 'rounded',
+        treesitter_highlighting = true,
+        show_documentation = false,
+      },
+    },
   }
 end
 
@@ -940,10 +983,16 @@ do
   vim.pack.add { { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' } }
 
   -- Ensure basic parsers are installed
+  -- Parsers are grouped by their primary use to keep future additions easy to
+  -- review. The main branch installs parsers asynchronously when needed.
   local parsers = {
+    -- Languages
     'bash', 'c', 'csv', 'diff', 'dockerfile', 'go', 'gomod', 'gosum', 'gowork',
-    'html', 'json', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'php',
-    'proto', 'python', 'query', 'vim', 'vimdoc', 'yaml',
+    'html', 'lua', 'php', 'python', 'vim',
+    -- Data, configuration, and utility formats
+    'json', 'proto', 'query', 'yaml',
+    -- Documentation and markup
+    'luadoc', 'markdown', 'markdown_inline', 'vimdoc',
   }
   require('nvim-treesitter').install(parsers)
 

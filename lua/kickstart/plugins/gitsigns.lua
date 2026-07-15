@@ -5,6 +5,13 @@
 vim.pack.add { 'https://github.com/lewis6991/gitsigns.nvim' }
 
 require('gitsigns').setup {
+  signs = {
+    add = { text = '+' },
+    change = { text = '~' },
+    delete = { text = '_' },
+    topdelete = { text = '‾' },
+    changedelete = { text = '~' },
+  },
   on_attach = function(bufnr)
     local gitsigns = require 'gitsigns'
 
@@ -39,6 +46,7 @@ require('gitsigns').setup {
     map('n', '<leader>hs', gitsigns.stage_hunk, { desc = 'git [s]tage hunk' })
     map('n', '<leader>hr', gitsigns.reset_hunk, { desc = 'git [r]eset hunk' })
     map('n', '<leader>hS', gitsigns.stage_buffer, { desc = 'git [S]tage buffer' })
+    map('n', '<leader>hu', gitsigns.undo_stage_hunk, { desc = 'git [u]ndo stage hunk' })
     map('n', '<leader>hR', gitsigns.reset_buffer, { desc = 'git [R]eset buffer' })
     map('n', '<leader>hp', gitsigns.preview_hunk, { desc = 'git [p]review hunk' })
     map('n', '<leader>hi', gitsigns.preview_hunk_inline, { desc = 'git preview hunk [i]nline' })

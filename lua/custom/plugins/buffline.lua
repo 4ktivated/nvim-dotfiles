@@ -1,3 +1,4 @@
+-- Legacy lazy.nvim specification consumed by custom.plugins.migrated.
 return {
 	"akinsho/bufferline.nvim",
 	version = "*",

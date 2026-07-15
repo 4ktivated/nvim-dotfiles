@@ -1,3 +1,4 @@
+-- Legacy lazy.nvim specification consumed by custom.plugins.migrated.
 ---@module "neominimap.config.meta"
 return {
   'Isrothy/neominimap.nvim',

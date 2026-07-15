@@ -10,7 +10,16 @@ vim.pack.add {
 vim.keymap.set('n', '\\', '<Cmd>Neotree reveal<CR>', { desc = 'NeoTree reveal', silent = true })
 
 require('neo-tree').setup {
+  popup_border_style = 'NC',
   filesystem = {
+    -- Keep the built-in netrw browser for `nvim .` and `:edit .`.
+    -- Neo-tree remains available explicitly through the `\` mapping.
+    hijack_netrw_behavior = 'disabled',
+    filtered_items = {
+      visible = true,
+      hide_dotfiles = false,
+      hide_gitignored = false,
+    },
     window = {
       mappings = {
         ['\\'] = 'close_window',

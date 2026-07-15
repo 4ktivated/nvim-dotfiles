@@ -1,3 +1,5 @@
+-- Disabled legacy lazy.nvim example. Prefer Gitsigns `<leader>tb` for inline
+-- blame, or rewrite this module with vim.pack before enabling it.
 return {
   --   'f-person/git-blame.nvim',
   --   -- load the plugin at startup

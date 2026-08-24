@@ -871,6 +871,13 @@ do
   vim.keymap.set({ 'n', 'v' }, '<leader>f', function() require('conform').format { async = true } end, { desc = '[F]ormat buffer' })
 end
 
+do
+  -- [[ Formatting MD]]
+  vim.pack.add {
+    'https://github.com/OXY2DEV/markview.nvim',
+  }
+end
+
 -- ============================================================
 -- SECTION 8: AUTOCOMPLETE & SNIPPETS
 -- blink.cmp and luasnip setup

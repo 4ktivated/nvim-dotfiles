@@ -410,13 +410,6 @@ do
   --  A collection of various small independent plugins/modules
   vim.pack.add { gh 'nvim-mini/mini.nvim' }
 
-  -- If a nerd font is available, load the icons module for pretty icons in various plugins.
-  if vim.g.have_nerd_font then
-    require('mini.icons').setup()
-    -- Used for backwards compatibility with plugins that require `nvim-web-devicons` (e.g. telescope.nvim)
-    MiniIcons.mock_nvim_web_devicons()
-  end
-
   -- Better Around/Inside textobjects
   --
   -- Examples:
@@ -444,7 +437,7 @@ do
   --  and try some other statusline plugin
   local statusline = require 'mini.statusline'
   -- Set `use_icons` to true if you have a Nerd Font
-  statusline.setup { use_icons = vim.g.have_nerd_font }
+  -- statusline.setup { use_icons = vim.g.have_nerd_font }
 
   -- You can configure sections in the statusline by overriding their
   -- default behavior. For example, here we set the section for
@@ -501,11 +494,22 @@ do
     -- You can put your default mappings / updates / etc. in here
     --  All the info you're looking for is in `:help telescope.setup()`
     --
-    -- defaults = {
-    --   mappings = {
-    --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-    --   },
-    -- },
+    defaults = {
+      vimgrep_arguments = {
+        'rg',
+        '--color=never',
+        '--no-heading',
+        '--with-filename',
+        '--line-number',
+        '--column',
+        '--smart-case',
+        '--hidden',
+        '--no-ignore',
+      },
+      -- mappings = {
+      --   i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+      -- },
+    },
     pickers = {
       -- Personal file-search behavior: include dotfiles and files ignored by Git.
       find_files = { hidden = true, no_ignore = true },
@@ -538,12 +542,17 @@ do
   vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = '[F]ind by [G]rep' })
   vim.keymap.set('n', '<leader>fd', builtin.diagnostics, { desc = '[F]ind [D]iagnostics' })
   -- macOS-friendly alias for searching only the current buffer.
-  vim.keymap.set('n', '<D-f>', function()
-    builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-      winblend = 10,
-      previewer = false,
-    })
-  end, { desc = 'Fuzzily search in current buffer' })
+  vim.keymap.set(
+    'n',
+    '<D-f>',
+    function()
+      builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+        winblend = 10,
+        previewer = false,
+      })
+    end,
+    { desc = 'Fuzzily search in current buffer' }
+  )
 
   -- Add Telescope-based LSP pickers when an LSP attaches to a buffer.
   -- If you later switch picker plugins, this is where to update these mappings.
@@ -747,21 +756,42 @@ do
     gopls = {
       -- Let Treesitter and Sonokai own Go highlighting. Newer lspconfig
       -- versions otherwise enable gopls semantic tokens over import strings.
-      settings = { gopls = { hints = {
-        rangeVariableTypes = true,
-        parameterNames = true,
-        constantValues = true,
-        assignVariableTypes = true,
-        compositeLiteralFields = true,
-        compositeLiteralTypes = true,
-        functionTypeParameters = true,
-      }, semanticTokens = false } },
+      settings = {
+        gopls = {
+          hints = {
+            rangeVariableTypes = true,
+            parameterNames = true,
+            constantValues = true,
+            assignVariableTypes = true,
+            compositeLiteralFields = true,
+            compositeLiteralTypes = true,
+            functionTypeParameters = true,
+          },
+          semanticTokens = false,
+        },
+      },
     },
     -- Python language tooling.
     ruff = {},
     pyright = {},
     -- PHP language tooling.
-    intelephense = {},
+    intelephense = {
+      settings = {
+        stubs = {
+          'php',
+          'builtin',
+          'composer',
+          'phpunit',
+          vim.fn.expand '~/.composer/vendor/bmewburn/intelephense-phpunit-stubs',
+        },
+        environment = {
+          includePaths = {
+            vim.fn.expand '~/.composer/vendor/autoload.php',
+          },
+        },
+      },
+    },
+    phpstan = {},
     -- Special Lua Config, as recommended by neovim help docs
     lua_ls = {
       on_init = function(client)
@@ -858,7 +888,8 @@ do
       lua = { 'stylua' },
       go = { 'gofmt', 'goimports' },
       bash = { 'shfmt' },
-      python = { 'black', 'ruff', 'isort' },
+      python = { 'ruff_fix', 'ruff_organize_imports', 'ruff_format' },
+      php = { 'phpcbf' },
       -- rust = { 'rustfmt' },
       -- Conform can also run multiple formatters sequentially
       -- python = { "isort", "black" },
@@ -866,16 +897,12 @@ do
       -- You can use 'stop_after_first' to run the first available formatter from the list
       -- javascript = { "prettierd", "prettier", stop_after_first = true },
     },
+    formatters = {
+      ruff_fix = { append_args = { '--no-unsafe-fixes' } },
+    },
   }
 
   vim.keymap.set({ 'n', 'v' }, '<leader>f', function() require('conform').format { async = true } end, { desc = '[F]ormat buffer' })
-end
-
-do
-  -- [[ Formatting MD]]
-  vim.pack.add {
-    'https://github.com/OXY2DEV/markview.nvim',
-  }
 end
 
 -- ============================================================
@@ -994,12 +1021,30 @@ do
   -- review. The main branch installs parsers asynchronously when needed.
   local parsers = {
     -- Languages
-    'bash', 'c', 'csv', 'diff', 'dockerfile', 'go', 'gomod', 'gosum', 'gowork',
-    'html', 'lua', 'php', 'python', 'vim',
+    'bash',
+    'c',
+    'csv',
+    'diff',
+    'dockerfile',
+    'go',
+    'gomod',
+    'gosum',
+    'gowork',
+    'html',
+    'lua',
+    'php',
+    'python',
+    'vim',
     -- Data, configuration, and utility formats
-    'json', 'proto', 'query', 'yaml',
+    'json',
+    'proto',
+    'query',
+    'yaml',
     -- Documentation and markup
-    'luadoc', 'markdown', 'markdown_inline', 'vimdoc',
+    'luadoc',
+    'markdown',
+    'markdown_inline',
+    'vimdoc',
   }
   require('nvim-treesitter').install(parsers)
 
@@ -1062,8 +1107,6 @@ do
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  require 'kickstart.plugins.debug'
-  -- require 'kickstart.plugins.indent_line'
   require 'kickstart.plugins.lint'
   require 'kickstart.plugins.autopairs'
   require 'kickstart.plugins.neo-tree'

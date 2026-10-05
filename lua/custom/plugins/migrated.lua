@@ -14,7 +14,6 @@ local specs = {
   bufferline = require 'custom.plugins.buffline',
   go = require 'custom.plugins.go-nvim',
   harpoon = require 'custom.plugins.harpoon',
-  indent = require 'custom.plugins.indent',
   langmapper = require 'custom.plugins.langmap',
   minimap = require 'custom.plugins.minimap',
   snacks = require 'custom.plugins.snacks',
@@ -33,7 +32,6 @@ local plugins = {
   gh 'ray-x/go.nvim',
   gh 'ray-x/guihua.lua',
   { src = gh 'ThePrimeagen/harpoon', version = 'harpoon2' },
-  gh 'lukas-reineke/indent-blankline.nvim',
   gh 'Wansmer/langmapper.nvim',
   gh 'folke/snacks.nvim',
   gh 'nvim-lualine/lualine.nvim',
@@ -49,7 +47,6 @@ specs.bufferline.init()
 -- native imperative module.
 specs.go.config()
 specs.harpoon.config()
-require('ibl').setup(specs.indent.opts)
 specs.langmapper.config()
 require('snacks').setup(specs.snacks.opts)
 require('lualine').setup(specs.lualine.opts)

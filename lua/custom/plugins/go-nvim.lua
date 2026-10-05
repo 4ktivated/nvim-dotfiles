@@ -1,16 +1,9 @@
--- Legacy lazy.nvim specification consumed by custom.plugins.migrated.
-return {
-	"ray-x/go.nvim",
-	dependencies = { -- optional packages
-		"ray-x/guihua.lua",
-		"neovim/nvim-lspconfig",
-		"nvim-treesitter/nvim-treesitter",
-	},
-	config = function()
-		require("go").setup()
-	end,
-	event = { "CmdlineEnter" },
-	ft = { "go", "gomod" },
-	build = ':lua require("go.install").update_all_sync()', -- if you need to install/update all binaries
-	-- GoGenerate - генерация моков
+vim.pack.add {
+  'https://github.com/ray-x/guihua.lua',
+  'https://github.com/ray-x/go.nvim',
 }
+
+-- nvim-lspconfig and nvim-treesitter are configured in init.lua.
+-- Go tools are updated by the PackChanged hook in init.lua.
+require('go').setup()
+-- GoGenerate - генерация моков

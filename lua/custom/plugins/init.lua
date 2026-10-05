@@ -3,16 +3,18 @@
 --
 -- See the kickstart.nvim README for more information
 
--- New plugin modules should use the Neovim 0.12 API directly:
+-- Each plugin module installs its packages and configures them directly:
 --
 --   vim.pack.add { 'https://github.com/owner/plugin.nvim' }
 --   require('plugin').setup { ... }
 --
--- Do not copy the `return { ... }` lazy.nvim specifications found in some of
--- the older modules. Those files are retained as configuration data for the
--- compatibility bridge in `custom.plugins.migrated`.
+-- Keep the setup order explicit: minimap globals are needed before loading its
+-- plugin, and langmapper wraps mappings created by subsequent modules.
+for _, module in ipairs { 'minimap', 'buffline', 'go-nvim', 'harpoon', 'langmap', 'snacks', 'supaline' } do
+  require('custom.plugins.' .. module)
+end
 
--- Iterate over all Lua files in the plugins directory and load them
+-- Discover additional modules. require() skips modules already loaded above.
 local plugins_dir = vim.fs.joinpath(vim.fn.stdpath 'config', 'lua', 'custom', 'plugins')
 for file_name, type in vim.fs.dir(plugins_dir, { follow = true }) do
   if (type == 'file' or type == 'link') and file_name:match '%.lua$' and file_name ~= 'init.lua' then
